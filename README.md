@@ -6,5 +6,14 @@
 src/main/resource 디렉토리에 key.properties 파일 생성
 생성한 파일에 `token=토큰명` 추가 (토큰명에 실제 토큰을 작성)
 
+### jira의 이슈키를 입력하여 이슈의 URL을 받는 방법
+슬랙 봇의 토큰 관리에서 생성한 key.properties에 아래와 같이 값을 넣어 준다.
+```
+jira.user=유저명
+jira.pass=비밀번호
+jira.issueKey=이슈키
+baseUri=jira의 경로 (http://localhost:8089/)
+```
+
 ### 실행방법
 sbt run
