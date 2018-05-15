@@ -20,11 +20,7 @@ object AppLauncher extends App {
   val jira = new Jira
 
   client.onMessage { message =>
-    if (message.text.toLowerCase.contains("hi")) {
-      client.sendMessage(message.channel, "안녕")
-    } else if (message.text.toLowerCase.contains("hello")) {
-      client.sendMessage(message.channel, "여보세요")
-    } else if (message.text.toLowerCase.contains(s"$issuePrefix-")) {
+    if (message.text.toLowerCase.contains(s"$issuePrefix-")) {
       jira.Run(message.text).onComplete {
         case Success(res) =>
           val str = Await.result(Unmarshal(res.entity).to[String], 5.seconds)
