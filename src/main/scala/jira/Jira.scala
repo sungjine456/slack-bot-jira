@@ -25,5 +25,5 @@ object Jira {
   private val baseUri = PropertiesReader("baseUri")
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
 
-  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
+  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey.toUpperCase
 }
