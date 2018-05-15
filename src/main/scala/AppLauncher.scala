@@ -15,7 +15,7 @@ object AppLauncher extends App {
   implicit val ec = system.dispatcher
 
   val client = SlackRtmClient(PropertiesReader("slack.token"))
-  val issuePrefix = PropertiesReader("jira.issueKey")
+  val issuePrefix = PropertiesReader("jira.issueKey").toLowerCase
 
   val jira = new Jira
 
