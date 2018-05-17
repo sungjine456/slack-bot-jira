@@ -11,7 +11,6 @@ object PropertiesReader {
 
   reader.lines().forEach { line =>
     val prefix = line.indexOf("=")
-    println(line.substring(0, prefix) -> line.substring(prefix + 1))
     map += (line.substring(0, prefix) -> line.substring(prefix + 1))
   }
 }
