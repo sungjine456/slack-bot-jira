@@ -15,12 +15,11 @@ object AppLauncher extends App {
   implicit val ec = system.dispatcher
 
   val client = SlackRtmClient(PropertiesReader("slack.token"))
-  val issuePrefix = PropertiesReader("jira.issueKey").toLowerCase
 
   val jira = new Jira
 
   client.onMessage { message =>
-    if (message.text.toLowerCase.contains(s"$issuePrefix-")) {
+    if (message.text.toLowerCase.contains(Jira.issueKey + "-")) {
       jira.Run(message.text).onComplete {
         case Success(res) =>
           val str = Await.result(Unmarshal(res.entity).to[String], 5.seconds)
