@@ -15,5 +15,7 @@ jira.issueKey=이슈키
 baseUri=jira의 경로 (http://localhost:8089/)
 ```
 
+최초 1회 실행 시 URL이 나오는게 느리다.
+
 ### 실행방법
 sbt run
