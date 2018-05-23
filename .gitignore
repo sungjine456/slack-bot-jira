@@ -1,4 +1,4 @@
 target
 .classpath
 .idea
-src/main/resources/key.properties
+src/main/resources/key.conf

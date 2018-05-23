@@ -6,14 +6,14 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import utils.PropertiesReader
+import utils.ConfigurationReader
 
 class Jira {
   def Run(message: String): Future[HttpResponse] = {
     implicit val system = ActorSystem("jira")
     implicit val executionContext = system.dispatcher
 
-    val authorization = headers.Authorization(BasicHttpCredentials(PropertiesReader("jira.user"), PropertiesReader("jira.pass")))
+    val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
 
     Http().singleRequest(
       HttpRequest(uri = Jira.searchUri + message, headers = List(authorization))
@@ -22,9 +22,9 @@ class Jira {
 }
 
 object Jira {
-  private val baseUri = PropertiesReader("baseUri")
+  private val baseUri = ConfigurationReader("jira.baseUri")
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
-  val issueKey: String = PropertiesReader("jira.issueKey").toLowerCase
+  val issueKey: String = ConfigurationReader("jira.issueKey").toLowerCase
 
   def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey.toUpperCase
 }

@@ -7,14 +7,14 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import jira.Jira
 import slack.rtm.SlackRtmClient
-import utils.PropertiesReader
+import utils.ConfigurationReader
 
 object AppLauncher extends App {
   implicit val system = ActorSystem("slack")
   implicit val materializer = ActorMaterializer()
   implicit val ec = system.dispatcher
 
-  val client = SlackRtmClient(PropertiesReader("slack.token"))
+  val client = SlackRtmClient(ConfigurationReader("slack.token"))
 
   val jira = new Jira
 
