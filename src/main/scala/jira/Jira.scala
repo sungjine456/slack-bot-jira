@@ -27,4 +27,13 @@ object Jira {
   val issueKey: String = ConfigurationReader("jira.issueKey").toLowerCase
 
   def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey.toUpperCase
+
+  def check(str: String): Boolean = {
+    val totalStr = "total\":"
+    val totalLength = totalStr.length
+    val totalValuePosition = str.indexOf(totalStr)
+    val totalValue = str.substring(totalValuePosition + totalLength, totalValuePosition + totalLength + 1)
+
+    totalValue != "0"
+  }
 }

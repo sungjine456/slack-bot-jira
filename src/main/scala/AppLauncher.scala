@@ -23,18 +23,9 @@ object AppLauncher extends App {
       jira.Run(message.text).onComplete {
         case Success(res) =>
           val str = Await.result(Unmarshal(res.entity).to[String], 5.seconds)
-          if (check(str)) client.sendMessage(message.channel, Jira.issueUri(message.text))
+          if (Jira.check(str)) client.sendMessage(message.channel, Jira.issueUri(message.text))
         case Failure(_) =>
       }
     }
-  }
-
-  private def check(str: String): Boolean = {
-    val totalStr = "total\":"
-    val totalLength = totalStr.length
-    val totalValuePosition = str.indexOf(totalStr)
-    val totalValue = str.substring(totalValuePosition + totalLength, totalValuePosition + totalLength + 1)
-
-    totalValue != "0"
   }
 }
