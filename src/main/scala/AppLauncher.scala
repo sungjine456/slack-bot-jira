@@ -1,19 +1,10 @@
-import akka.actor.ActorSystem
-import jira.Jira
-import slack.rtm.SlackRtmClient
-import utils.ConfigurationReader
+import akka.actor.{ ActorSystem, Props }
+import slack.{ Slack, SlackState }
 
 object AppLauncher extends App {
-  implicit val system = ActorSystem("slack")
-  implicit val executionContext = system.dispatcher
+  implicit val system = ActorSystem("slack-jira")
 
-  val client = SlackRtmClient(ConfigurationReader("slack.token"))
+  val client = system.actorOf(Props[Slack], "SlackReceiver")
 
-  val jira = new Jira
-
-  client.onMessage { message =>
-    if (message.text.toLowerCase.contains(Jira.issueKey + "-")) {
-      jira.getUri(message.text).map(uri => client.sendMessage(message.channel, uri))
-    }
-  }
+  client ! SlackState.Receive
 }
