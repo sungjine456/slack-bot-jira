@@ -50,7 +50,7 @@ class Jira(slackActor: ActorRef) extends Actor {
 object Jira {
   private val baseUri = ConfigurationReader("jira.baseUri")
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
-  val issueKey: String = ConfigurationReader("jira.issueKey").toLowerCase
+  val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
 
-  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey.toUpperCase
+  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
 }
