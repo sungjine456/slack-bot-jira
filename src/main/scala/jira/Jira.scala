@@ -33,7 +33,7 @@ class Jira(slackActor: ActorRef) extends Actor {
   }
 
   override def receive: Receive = {
-    case text: String => slackActor ! getUri(text)
+    case text: String => getUri(text).foreach(slackActor ! _)
     case _ =>
   }
 

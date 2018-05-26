@@ -13,8 +13,8 @@ class Slack extends Actor {
   val watcher = system.actorOf(Props(new Jira(self)), "Jira")
 
   override def receive: Receive = {
-    case uri: Option[String] =>
-      client.sendMessage(client.state.getChannelIdForName("general").get, uri.get)
+    case uri: String =>
+      client.sendMessage(client.state.getChannelIdForName("general").get, uri)
     case SlackState.Receive =>
       client.onMessage { message =>
         if (message.text.toLowerCase.contains(Jira.issueKey + "-")) watcher ! message.text
