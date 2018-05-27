@@ -13,11 +13,11 @@ class Slack extends Actor {
   val jiraActor = system.actorOf(Props(new Jira(self)), "Jira")
 
   override def receive: Receive = {
-    case uri: String =>
-      client.sendMessage(client.state.getChannelIdForName("general").get, uri)
+    case message: Tuple2[String, String]=>
+      client.sendMessage(message._2, message._1)
     case SlackState.Receive =>
       client.onMessage { message =>
-        if (message.text.toUpperCase.contains(Jira.issueKey + "-")) jiraActor ! message.text
+        if (message.text.toUpperCase.contains(Jira.issueKey + "-")) jiraActor ! (message.text, message.channel)
       }
   }
 }
