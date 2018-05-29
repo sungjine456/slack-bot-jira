@@ -2,6 +2,7 @@ package jira
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import scala.util.{ Failure, Success }
 
 import akka.actor.{ Actor, ActorRef }
 import akka.http.scaladsl.Http
@@ -13,27 +14,25 @@ import utils.ConfigurationReader
 
 class Jira(slackActor: ActorRef) extends Actor {
   implicit val system = context.system
+  implicit val mat = ActorMaterializer()
+  implicit val ec = system.dispatcher
 
-  private def getUri(message: String): Option[String] = {
-    implicit val mat = ActorMaterializer()
-
+  private def getResponse(issueKey: String): HttpResponse = {
     val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
 
-    var uri: Option[String] = None
-
     val httpResponse = Http().singleRequest(
-      HttpRequest(uri = Jira.searchUri + message, headers = List(authorization))
+      HttpRequest(uri = Jira.searchUri + issueKey, headers = List(authorization))
     )
-    val res = Await.result(httpResponse, 5.seconds)
-    val result = Await.result(Unmarshal(res.entity).to[String], 5.seconds)
-
-    if (check(result)) uri = Some(Jira.issueUri(message))
-
-    uri
+    Await.result(httpResponse, 5.seconds)
   }
 
   override def receive: Receive = {
-    case (issueKey: String, channelId: String) => getUri(issueKey).foreach(slackActor ! (channelId, _))
+    case (issueKey: String, channelId: String) =>
+      Unmarshal(getResponse(issueKey).entity).to[String].onComplete {
+        case Success(message) =>
+          if (check(message)) slackActor ! (channelId, Jira.issueUri(issueKey))
+        case Failure(_) =>
+      }
     case _ =>
   }
 
