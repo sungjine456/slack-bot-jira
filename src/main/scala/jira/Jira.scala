@@ -2,7 +2,7 @@ package jira
 
 import scala.util.{ Failure, Success }
 
-import akka.actor.{ Actor, ActorRef }
+import akka.actor.{ Actor, ActorLogging, ActorRef }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
@@ -10,7 +10,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import utils.ConfigurationReader
 
-class Jira(slackActor: ActorRef) extends Actor {
+class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
   implicit val system = context.system
   implicit val mat = ActorMaterializer()
   implicit val ec = system.dispatcher
@@ -25,9 +25,9 @@ class Jira(slackActor: ActorRef) extends Actor {
         case Success(response) => Unmarshal(response.entity).to[String].onComplete {
           case Success(message) =>
             if (check(message)) slackActor ! (channelId, Jira.issueUri(issueKey))
-          case Failure(_) =>
+          case Failure(e) => log.debug(e.getMessage)
         }
-        case Failure(_) =>
+        case Failure(e) => log.debug(e.getMessage)
       }
     case _ =>
   }
