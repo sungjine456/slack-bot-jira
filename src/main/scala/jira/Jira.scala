@@ -1,7 +1,5 @@
 package jira
 
-import scala.util.{ Failure, Success }
-
 import akka.actor.{ Actor, ActorLogging, ActorRef }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -17,18 +15,20 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
 
   val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
 
+  private def getResponse(issueKey: String) = {
+    Http().singleRequest(
+      HttpRequest(uri = Jira.searchUri + issueKey, headers = List(authorization))
+    )
+  }
+
+  private def getMessage(response: HttpResponse) = Unmarshal(response.entity).to[String]
+
   override def receive: Receive = {
     case (issueKey: String, channelId: String) =>
-      Http().singleRequest(
-        HttpRequest(uri = Jira.searchUri + issueKey, headers = List(authorization))
-      ).onComplete {
-        case Success(response) => Unmarshal(response.entity).to[String].onComplete {
-          case Success(message) =>
-            if (check(message)) slackActor ! (channelId, Jira.issueUri(issueKey))
-          case Failure(e) => log.debug(e.getMessage)
-        }
-        case Failure(e) => log.debug(e.getMessage)
-      }
+      for {
+        res <- getResponse(issueKey)
+        message <- getMessage(res)
+      } yield if (check(message)) slackActor ! (channelId, Jira.issueUri(issueKey))
     case _ =>
   }
 
