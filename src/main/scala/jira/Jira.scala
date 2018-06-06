@@ -9,11 +9,11 @@ import akka.stream.ActorMaterializer
 import utils.ConfigurationReader
 
 class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
-  implicit val system = context.system
-  implicit val mat = ActorMaterializer()
-  implicit val ec = system.dispatcher
+  implicit private val system = context.system
+  implicit private val mat = ActorMaterializer()
+  implicit private val ec = system.dispatcher
 
-  val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
+  private val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
 
   private def getResponse(issueKey: String) = {
     Http().singleRequest(
@@ -47,5 +47,5 @@ object Jira {
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
   val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
 
-  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
+  private def issueUri(issueKey: String) = baseUri + "browse/" + issueKey
 }

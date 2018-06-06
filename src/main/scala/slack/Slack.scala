@@ -6,11 +6,10 @@ import slack.rtm.SlackRtmClient
 import utils.ConfigurationReader
 
 class Slack extends Actor {
-  implicit val system = context.system
+  implicit private val system = context.system
 
-  val client = SlackRtmClient(ConfigurationReader("slack.token"))
-
-  val jiraActor = system.actorOf(Props(new Jira(self)), "Jira")
+  private val client = SlackRtmClient(ConfigurationReader("slack.token"))
+  private val jiraActor = system.actorOf(Props(new Jira(self)), "Jira")
 
   override def receive: Receive = {
     case (channelId: String, uri: String) => client.sendMessage(channelId, uri)
