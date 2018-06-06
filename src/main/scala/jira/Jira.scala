@@ -6,6 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import slack.models.Attachment
 import utils.ConfigurationReader
 
 class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
@@ -23,12 +24,16 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
 
   private def getMessage(response: HttpResponse) = Unmarshal(response.entity).to[String]
 
+  private def makeAttachments(issueKey: String) = {
+    Some(Seq(Attachment(title = Some(issueKey), title_link = Some(Jira.issueUri(issueKey)))))
+  }
+
   override def receive: Receive = {
     case (issueKey: String, channelId: String) =>
       for {
         res <- getResponse(issueKey)
         message <- getMessage(res)
-      } yield if (check(message)) slackActor ! (channelId, Jira.issueUri(issueKey))
+      } yield if (check(message)) slackActor ! (channelId, makeAttachments(issueKey))
     case _ =>
   }
 

@@ -3,6 +3,7 @@ package slack
 import akka.actor.{ Actor, Props }
 import jira.Jira
 import slack.api.SlackApiClient
+import slack.models.Attachment
 import slack.rtm.SlackRtmClient
 import utils.ConfigurationReader
 
@@ -17,7 +18,7 @@ class Slack extends Actor {
   private val jiraActor = system.actorOf(Props(new Jira(self)), "Jira")
 
   override def receive: Receive = {
-    case (channelId: String, uri: String) => apiClient.postChatMessage(channelId, uri)
+    case (channelId: String, attachments: Option[Seq[Attachment]]) => apiClient.postChatMessage(channelId, "", attachments = attachments)
     case SlackState.Receive =>
       rtmClient.onMessage { message =>
         if (message.text.toUpperCase.contains(Jira.issueKey + "-")) jiraActor ! (message.text, message.channel)
