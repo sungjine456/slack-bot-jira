@@ -50,7 +50,11 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
 object Jira {
   private val baseUri = ConfigurationReader("jira.baseUri")
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
-  val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
+  private val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
 
   private def issueUri(issueKey: String) = baseUri + "browse/" + issueKey
+
+  def containsIssueKey(text: String): Boolean = {
+    text.contains(issueKey + "-")
+  }
 }

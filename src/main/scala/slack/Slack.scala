@@ -21,7 +21,8 @@ class Slack extends Actor {
     case (channelId: String, attachments: Option[Seq[Attachment]]) => apiClient.postChatMessage(channelId, "", attachments = attachments)
     case SlackState.Receive =>
       rtmClient.onMessage { message =>
-        if (message.text.toUpperCase.contains(Jira.issueKey + "-")) jiraActor ! (message.text, message.channel)
+        val text = message.text.toUpperCase
+        if (Jira.containsIssueKey(text)) jiraActor ! (text, message.channel)
       }
   }
 }
