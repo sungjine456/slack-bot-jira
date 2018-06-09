@@ -51,10 +51,11 @@ object Jira {
   private val baseUri = ConfigurationReader("jira.baseUri")
   private val searchUri = baseUri + "rest/api/2/search?jql=issue="
   private val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
+  private val regex = s"$issueKey-[0-9]+".r
 
   private def issueUri(issueKey: String) = baseUri + "browse/" + issueKey
 
-  def containsIssueKey(text: String): Boolean = {
-    text.contains(issueKey + "-")
-  }
+  def containsIssueKey(text: String): Boolean = regex.findFirstIn(text).nonEmpty
+
+  def getIssuesInText(text: String): Seq[String] = regex.findAllIn(text).toSeq
 }

@@ -22,7 +22,11 @@ class Slack extends Actor {
     case SlackState.Receive =>
       rtmClient.onMessage { message =>
         val text = message.text.toUpperCase
-        if (Jira.containsIssueKey(text)) jiraActor ! (text, message.channel)
+        if (Jira.containsIssueKey(text)) {
+          Jira.getIssuesInText(text).foreach { issueKey =>
+            jiraActor ! (issueKey, message.channel)
+          }
+        }
       }
   }
 }
