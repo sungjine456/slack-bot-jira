@@ -7,6 +7,7 @@ import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import slack.models.Attachment
+import spray.json._
 import utils.ConfigurationReader
 
 class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
@@ -33,17 +34,12 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
       for {
         res <- getResponse(issueKey)
         message <- getMessage(res)
-      } yield if (check(message)) slackActor ! (channelId, makeAttachments(issueKey))
+      } yield {
+        val jiraContent = JiraContent(message.parseJson.asJsObject)
+
+        if(jiraContent.check) slackActor ! (channelId, makeAttachments(issueKey))
+      }
     case _ =>
-  }
-
-  private def check(str: String): Boolean = {
-    val totalStr = "total\":"
-    val totalLength = totalStr.length
-    val totalValuePosition = str.indexOf(totalStr)
-    val totalValue = str.substring(totalValuePosition + totalLength, totalValuePosition + totalLength + 1)
-
-    totalValue != "0"
   }
 }
 
