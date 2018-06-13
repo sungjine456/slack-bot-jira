@@ -6,7 +6,6 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
-import slack.models.Attachment
 import spray.json._
 import utils.ConfigurationReader
 
@@ -25,10 +24,6 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
 
   private def getMessage(response: HttpResponse) = Unmarshal(response.entity).to[String]
 
-  private def makeAttachments(issueKey: String) = {
-    Some(Seq(Attachment(title = Some(issueKey), title_link = Some(Jira.issueUri(issueKey)))))
-  }
-
   override def receive: Receive = {
     case (issueKey: String, channelId: String) =>
       for {
@@ -37,7 +32,7 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
       } yield {
         val jiraContent = JiraContent(message.parseJson.asJsObject)
 
-        if(jiraContent.check) slackActor ! (channelId, makeAttachments(issueKey))
+        if(jiraContent.check) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
       }
     case _ =>
   }
@@ -49,7 +44,7 @@ object Jira {
   private val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
   private val regex = s"$issueKey-[0-9]+".r
 
-  private def issueUri(issueKey: String) = baseUri + "browse/" + issueKey
+  def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
 
   def containsIssueKey(text: String): Boolean = regex.findFirstIn(text).nonEmpty
 
