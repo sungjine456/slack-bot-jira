@@ -14,7 +14,7 @@ case class JiraContent(private val jsValue: JsObject) {
       (jsValueConvertString(fieldsObj("summary")), jsValueConvertString(statusObj("name")))
     }.get
 
-    Some(Seq(Attachment(text = Some("<" + Jira.issueUri(issueKey) + "|" + issueKey + "> : `" + statusName + "` " + summary))))
+    Some(Seq(Attachment(text = Some(s"<${Jira.issueUri(issueKey)}|$issueKey> : `$statusName` $summary"))))
   }
 
   private def jsValueConvertString(value: JsValue) = {
