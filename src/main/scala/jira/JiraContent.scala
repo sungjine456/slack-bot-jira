@@ -1,10 +1,13 @@
 package jira
 
 import slack.models.Attachment
-import spray.json.{ JsArray, JsObject, JsValue }
+import spray.json.{ JsArray, JsNumber, JsObject, JsValue }
 
 case class JiraContent(private val jsValue: JsObject) {
-  def check: Boolean = jsValue.fields.get("total").map(total => total.toString() != "0").get
+  def nonEmpty: Boolean = jsValue.fields.get("total").map {
+    case number: JsNumber => number.value > 0
+    case _ => false
+  }.get
 
   def makeAttachments(issueKey: String): Attachment = {
     val (summary, statusName) = jsValue.fields("issues").asInstanceOf[JsArray].elements.headOption.map { value =>

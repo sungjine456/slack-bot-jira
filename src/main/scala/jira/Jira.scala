@@ -32,7 +32,7 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
       } yield {
         val jiraContent = JiraContent(message.parseJson.asJsObject)
 
-        if(jiraContent.check) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
+        if(jiraContent.nonEmpty) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
       }
     case _ =>
   }
