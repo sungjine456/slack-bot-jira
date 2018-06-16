@@ -6,7 +6,7 @@ import spray.json.{ JsArray, JsObject, JsValue }
 case class JiraContent(private val jsValue: JsObject) {
   def check: Boolean = jsValue.fields.get("total").map(total => total.toString() != "0").get
 
-  def makeAttachments(issueKey: String): Option[Seq[Attachment]] = {
+  def makeAttachments(issueKey: String): Attachment = {
     val (summary, statusName) = jsValue.fields("issues").asInstanceOf[JsArray].elements.headOption.map { value =>
       val fieldsObj = value.asJsObject.fields("fields").asJsObject.fields
       val statusObj = fieldsObj("status").asJsObject.fields
@@ -14,7 +14,7 @@ case class JiraContent(private val jsValue: JsObject) {
       (jsValueConvertString(fieldsObj("summary")), jsValueConvertString(statusObj("name")))
     }.get
 
-    Some(Seq(Attachment(text = Some(s"<${Jira.issueUri(issueKey)}|$issueKey> : `$statusName` $summary"))))
+    Attachment(text = Some(s"<${Jira.issueUri(issueKey)}|$issueKey> : `$statusName` $summary"))
   }
 
   private def jsValueConvertString(value: JsValue) = {

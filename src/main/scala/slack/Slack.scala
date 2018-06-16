@@ -18,7 +18,7 @@ class Slack extends Actor {
   private val jiraActor = system.actorOf(Props(new Jira(self)), "Jira")
 
   override def receive: Receive = {
-    case (channelId: String, attachments: Option[Seq[Attachment]]) => apiClient.postChatMessage(channelId, "", attachments = attachments)
+    case (channelId: String, attachment: Attachment) => apiClient.postChatMessage(channelId, "", attachments = Some(Seq(attachment)))
     case SlackState.Receive =>
       rtmClient.onMessage { message =>
         Jira.getIssuesInText(message.text.toUpperCase).foreach(jiraActor ! (_, message.channel))
