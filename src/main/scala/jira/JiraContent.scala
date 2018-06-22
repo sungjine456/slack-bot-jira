@@ -1,27 +1,28 @@
 package jira
 
 import slack.models.Attachment
-import spray.json.{ JsArray, JsNumber, JsObject, JsValue }
+import spray.json.{ DefaultJsonProtocol, RootJsonFormat }
 
-case class JiraContent(private val jsValue: JsObject) {
-  def nonEmpty: Boolean = jsValue.fields.get("total").map {
-    case number: JsNumber => number.value > 0
-    case _ => false
-  }.get
+case class JiraContent(private val content: Content) {
+  def nonEmpty: Boolean = content.total > 0
 
   def makeAttachments(issueKey: String): Attachment = {
-    val (summary, statusName) = jsValue.fields("issues").asInstanceOf[JsArray].elements.headOption.map { value =>
-      val fieldsObj = value.asJsObject.fields("fields").asJsObject.fields
-      val statusObj = fieldsObj("status").asJsObject.fields
-
-      (jsValueConvertString(fieldsObj("summary")), jsValueConvertString(statusObj("name")))
+    val (summary, statusName) = content.issues.headOption.map { issue =>
+      (issue.fields.summary, issue.fields.status.name)
     }.get
 
-    Attachment(text = Some(s"<${Jira.issueUri(issueKey)}|$issueKey> : `$statusName` $summary"))
+    Attachment(text = Some(s"<${ Jira.issueUri(issueKey) }|$issueKey> : `$statusName` $summary"))
   }
+}
 
-  private def jsValueConvertString(value: JsValue) = {
-    val str = value.toString()
-    str.substring(1, str.length - 1)
-  }
+case class Content(total: Int, issues: Seq[Issues])
+case class Issues(fields: Fields)
+case class Fields(summary: String, status: Status)
+case class Status(name: String)
+
+object MyJsonProtocol extends DefaultJsonProtocol {
+  implicit val statusFormat: RootJsonFormat[Status] = jsonFormat1(Status)
+  implicit val fieldsFormat: RootJsonFormat[Fields] = jsonFormat2(Fields)
+  implicit val issuesFormat: RootJsonFormat[Issues] = jsonFormat1(Issues)
+  implicit val contentFormat: RootJsonFormat[Content] = jsonFormat2(Content)
 }

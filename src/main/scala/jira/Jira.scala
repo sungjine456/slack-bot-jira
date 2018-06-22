@@ -6,6 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import jira.MyJsonProtocol._
 import spray.json._
 import utils.ConfigurationReader
 
@@ -30,9 +31,9 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
         res <- getResponse(issueKey)
         message <- getMessage(res)
       } yield {
-        val jiraContent = JiraContent(message.parseJson.asJsObject)
+        val jiraContent = JiraContent(message.parseJson.convertTo[Content])
 
-        if(jiraContent.nonEmpty) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
+        if (jiraContent.nonEmpty) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
       }
     case _ =>
   }
