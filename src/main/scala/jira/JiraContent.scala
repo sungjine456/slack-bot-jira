@@ -7,11 +7,13 @@ case class JiraContent(private val content: Content) {
   def nonEmpty: Boolean = content.total > 0
 
   def makeAttachments(issueKey: String): Attachment = {
-    val (summary, statusName) = content.issues.headOption.map { issue =>
+    content.issues.headOption.map { issue =>
       (issue.fields.summary, issue.fields.status.name)
-    }.get
-
-    Attachment(text = Some(s"<${ Jira.issueUri(issueKey) }|$issueKey> : `$statusName` $summary"))
+    } match {
+      case Some((summary, statusName)) =>
+        Attachment(text = Some(s"<${ Jira.issueUri(issueKey) }|$issueKey> : `$statusName` $summary"))
+      case None => Attachment(text = Some(s"<${ Jira.issueUri(issueKey) }|$issueKey>"))
+    }
   }
 }
 
