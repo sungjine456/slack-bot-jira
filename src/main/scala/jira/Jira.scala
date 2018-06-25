@@ -49,5 +49,5 @@ object Jira {
 
   def containsIssueKey(text: String): Boolean = regex.findFirstIn(text).nonEmpty
 
-  def getIssuesInText(text: String): Seq[String] = regex.findAllIn(text).toSeq
+  def getIssuesInText(text: String): Set[String] = regex.findAllIn(text).toSet
 }
