@@ -21,7 +21,7 @@ class Slack extends Actor {
     case (channelId: String, attachment: Attachment) => apiClient.postChatMessage(channelId, "", attachments = Some(Seq(attachment)))
     case SlackState.Receive =>
       rtmClient.onMessage { message =>
-        Jira.getIssuesInText(message.text.toUpperCase).foreach(jiraActor ! (_, message.channel))
+        Jira.getIssuesInText(message.text).foreach(jiraActor ! (_, message.channel))
       }
   }
 }

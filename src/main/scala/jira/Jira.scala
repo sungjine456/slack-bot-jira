@@ -47,7 +47,7 @@ object Jira {
 
   def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
 
-  def containsIssueKey(text: String): Boolean = regex.findFirstIn(text).nonEmpty
+  def containsIssueKey(text: String): Boolean = regex.findFirstIn(text.toUpperCase).nonEmpty
 
-  def getIssuesInText(text: String): Set[String] = regex.findAllIn(text).toSet
+  def getIssuesInText(text: String): Set[String] = regex.findAllIn(text.toUpperCase).toSet
 }
