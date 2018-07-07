@@ -1,6 +1,6 @@
 package jira
 
-import akka.actor.{ Actor, ActorLogging, ActorRef }
+import akka.actor.{ Actor, ActorLogging }
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
@@ -10,7 +10,7 @@ import jira.MyJsonProtocol._
 import spray.json._
 import utils.ConfigurationReader
 
-class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
+class Jira extends Actor with ActorLogging {
   implicit private val system = context.system
   implicit private val mat = ActorMaterializer()
   implicit private val ec = system.dispatcher
@@ -27,13 +27,15 @@ class Jira(slackActor: ActorRef) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case (issueKey: String, channelId: String) =>
+      val sender = this.sender
+
       for {
         res <- getResponse(issueKey)
         message <- getMessage(res)
       } yield {
         val jiraContent = JiraContent(message.parseJson.convertTo[Content])
 
-        if (jiraContent.nonEmpty) slackActor ! (channelId, jiraContent.makeAttachments(issueKey))
+        if (jiraContent.nonEmpty) sender ! (channelId, jiraContent.makeAttachments(issueKey))
       }
     case _ =>
   }
