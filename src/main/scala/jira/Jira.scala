@@ -1,36 +1,26 @@
 package jira
 
 import akka.actor.{ Actor, ActorLogging }
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import helper.HttpHelper
 import jira.MyJsonProtocol._
 import spray.json._
 import utils.ConfigurationReader
 
-class Jira extends Actor with ActorLogging {
+class Jira extends Actor with ActorLogging with HttpHelper {
   implicit private val system = context.system
   implicit private val mat = ActorMaterializer()
   implicit private val ec = system.dispatcher
 
-  private val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("jira.user"), ConfigurationReader("jira.pass")))
-
-  private def getResponse(issueKey: String) = {
-    Http().singleRequest(
-      HttpRequest(uri = Jira.searchUri + issueKey, headers = List(authorization))
-    )
-  }
-
-  private def getMessage(response: HttpResponse) = Unmarshal(response.entity).to[String]
+  override protected val authId = ConfigurationReader("jira.user")
+  override protected val authPassword = ConfigurationReader("jira.pass")
 
   override def receive: Receive = {
     case (issueKey: String, channelId: String) =>
       val sender = this.sender
 
       for {
-        res <- getResponse(issueKey)
+        res <- getResponse(Jira.searchUri(issueKey))
         message <- getMessage(res)
       } yield {
         val jiraContent = JiraContent(message.parseJson.convertTo[Content])
@@ -43,7 +33,9 @@ class Jira extends Actor with ActorLogging {
 
 object Jira {
   private val baseUri = ConfigurationReader("jira.baseUri")
-  private val searchUri = baseUri + "rest/api/2/search?jql=issue="
+
+  private def searchUri(issueKey: String) = s"${ baseUri }rest/api/2/search?jql=issue=$issueKey"
+
   private val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
   private val regex = s"$issueKey-[0-9]+".r
 

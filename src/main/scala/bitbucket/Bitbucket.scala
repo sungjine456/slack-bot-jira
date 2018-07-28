@@ -1,27 +1,17 @@
 package bitbucket
 
 import akka.actor.{ Actor, ActorLogging }
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.BasicHttpCredentials
-import akka.http.scaladsl.model.{ HttpRequest, HttpResponse, headers }
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
+import helper.HttpHelper
 import utils.ConfigurationReader
 
-class Bitbucket extends Actor with ActorLogging {
+class Bitbucket extends Actor with ActorLogging with HttpHelper {
   implicit private val system = context.system
   implicit private val mat = ActorMaterializer()
   implicit private val ec = system.dispatcher
 
-  private val authorization = headers.Authorization(BasicHttpCredentials(ConfigurationReader("bitbucket.user"), ConfigurationReader("bitbucket.pass")))
-
-  private def getResponse = {
-    Http().singleRequest(
-      HttpRequest(uri = Bitbucket.pullRequestUri, headers = List(authorization))
-    )
-  }
-
-  private def getMessage(response: HttpResponse) = Unmarshal(response.entity).to[String]
+  override protected val authId = ConfigurationReader("bitbucket.user")
+  override protected val authPassword = ConfigurationReader("bitbucket.pass")
 
   override def receive: Receive = {
     case ("bit-help", channelId: String) =>
@@ -34,7 +24,7 @@ class Bitbucket extends Actor with ActorLogging {
       val sender = this.sender
 
       for {
-        res <- getResponse
+        res <- getResponse(Bitbucket.pullRequestUri)
         message <- getMessage(res)
       } yield {
         println(sender)
@@ -46,9 +36,9 @@ class Bitbucket extends Actor with ActorLogging {
 
 object Bitbucket {
   private val baseUri = ConfigurationReader("bitbucket.baseUri")
-  private val projectUri: String = baseUri + "rest/api/1.0/projects/" + ConfigurationReader("bitbucket.projectName")
-  private val repositoryUri: String = projectUri + "/repos/" + ConfigurationReader("bitbucket.repositoryName")
-  val pullRequestUri: String = repositoryUri + "/pull-requests"
+  private val projectUri: String = s"${ baseUri }rest/api/1.0/projects/${ ConfigurationReader("bitbucket.projectName") }/"
+  private val repositoryUri: String = s"${ projectUri }repos/${ ConfigurationReader("bitbucket.repositoryName") }"
+  val pullRequestUri: String = s"$repositoryUri/pull-requests"
 
   private val commendPrefix = "bit-"
 
