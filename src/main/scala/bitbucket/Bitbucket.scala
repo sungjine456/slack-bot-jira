@@ -27,7 +27,6 @@ class Bitbucket extends Actor with ActorLogging with HttpHelper {
         res <- getResponse(Bitbucket.pullRequestUri)
         message <- getMessage(res)
       } yield {
-        println(sender)
         sender ! (channelId, s"success")
       }
     case _ => println("error")
