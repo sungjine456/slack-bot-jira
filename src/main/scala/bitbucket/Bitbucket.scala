@@ -3,6 +3,8 @@ package bitbucket
 import akka.actor.{ Actor, ActorLogging }
 import akka.stream.ActorMaterializer
 import helper.HttpHelper
+import bitbucket.MyJsonProtocol._
+import spray.json._
 import utils.ConfigurationReader
 
 class Bitbucket extends Actor with ActorLogging with HttpHelper {
@@ -20,14 +22,16 @@ class Bitbucket extends Actor with ActorLogging with HttpHelper {
       Bitbucket.commends.foreach(commend => builder.append(s"$commend\n"))
 
       sender ! (channelId, builder.toString)
-    case ("bit-pull-request", channelId: String) =>
+    case ("bit-pull-request-size", channelId: String) =>
       val sender = this.sender
 
       for {
         res <- getResponse(Bitbucket.pullRequestUri)
         message <- getMessage(res)
       } yield {
-        sender ! (channelId, s"success")
+        val bitbucketContent = BitbucketContent(message.parseJson.convertTo[PullRequests])
+
+        sender ! (channelId, bitbucketContent.printPullRequestSize)
       }
     case _ => println("error")
   }
@@ -42,9 +46,8 @@ object Bitbucket {
   private val commendPrefix = "bit-"
 
   val commends: Seq[String] = Seq(
-    commendPrefix + "help",
-    commendPrefix + "pull-request"
-  )
+    "help", "pull-request-size"
+  ).map(commend => commendPrefix + commend)
 
   def containsCommends(commend: String): Boolean = {
     commends.contains(commend)
