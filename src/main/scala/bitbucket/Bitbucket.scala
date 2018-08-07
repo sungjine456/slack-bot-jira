@@ -33,6 +33,17 @@ class Bitbucket extends Actor with ActorLogging with HttpHelper {
 
         sender ! (channelId, bitbucketContent.printPullRequestSize)
       }
+    case ("bit-un-reviewed", channelId: String) =>
+      val sender = this.sender
+
+      for {
+        res <- getResponse(Bitbucket.pullRequestUri)
+        message <- getMessage(res)
+      } yield {
+        val bitbucketContent = BitbucketContent(message.parseJson.convertTo[PullRequests])
+
+        sender ! (channelId, bitbucketContent.unReviewer)
+      }
     case _ => println("error")
   }
 }
@@ -46,7 +57,7 @@ object Bitbucket {
   private val commendPrefix = "bit-"
 
   val commends: Seq[String] = Seq(
-    "help", "pull-request-size"
+    "help", "pull-request-size", "un-reviewed"
   ).map(commend => commendPrefix + commend)
 
   def containsCommends(commend: String): Boolean = {
