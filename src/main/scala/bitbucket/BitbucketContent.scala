@@ -3,6 +3,7 @@ package bitbucket
 import spray.json.{ DefaultJsonProtocol, RootJsonFormat }
 
 case class BitbucketContent(private val pullRequests: PullRequests) {
+
   import ReviewerState._
 
   def printPullRequestSize: String = s"저장소에 등록된 PR은 ${ pullRequests.size }개가 있습니다."
@@ -16,7 +17,10 @@ case class BitbucketContent(private val pullRequests: PullRequests) {
 
     val result = StringBuilder.newBuilder
 
-    reviewer.foreach(s => result.append(s"${ s._1 }님은 ${ s._2 }개의 리뷰가 남았습니다.\n"))
+    if(reviewer.nonEmpty)
+      reviewer.foreach(s => result.append(s"${ s._1 }님은 ${ s._2 }개의 리뷰가 남았습니다.\n"))
+    else
+      result.append("모두 리뷰가 된 상태입니다.")
 
     result.toString()
   }
