@@ -3,18 +3,20 @@ package bitbucket
 import spray.json.{ DefaultJsonProtocol, RootJsonFormat }
 
 case class BitbucketContent(private val pullRequests: PullRequests) {
-  def printPullRequestSize: String = s"저장소에 등록된 PR은 ${pullRequests.size}개가 있습니다."
+  import ReviewerState._
+
+  def printPullRequestSize: String = s"저장소에 등록된 PR은 ${ pullRequests.size }개가 있습니다."
 
   def unReviewer: String = {
     val reviewer: Map[String, Int] = pullRequests.values.flatMap { pr =>
       pr.reviewers
-        .filter( reviewer => reviewer.status == "UNAPPROVED")
+        .filter(reviewer => reviewer.status == UNAPPROVED.toString)
         .map(reviewer => reviewer.user.name)
     }.groupBy(identity).mapValues(_.size)
 
     val result = StringBuilder.newBuilder
 
-    reviewer.foreach(s => result.append(s"${s._1}님은 ${s._2}개의 리뷰가 남았습니다.\n"))
+    reviewer.foreach(s => result.append(s"${ s._1 }님은 ${ s._2 }개의 리뷰가 남았습니다.\n"))
 
     result.toString()
   }
