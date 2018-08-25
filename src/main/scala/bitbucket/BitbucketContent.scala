@@ -1,14 +1,17 @@
 package bitbucket
 
-import spray.json.{ DefaultJsonProtocol, RootJsonFormat }
+import spray.json._
+import MyJsonProtocol._
 
-case class BitbucketContent(private val pullRequests: PullRequests) {
+case class BitbucketContent(message: String) {
 
   import ReviewerState._
 
+  private val pullRequests = message.parseJson.convertTo[PullRequests]
+
   def printPullRequestSize: String = s"저장소에 등록된 PR은 ${ pullRequests.size }개가 있습니다."
 
-  def unReviewer: String = {
+  def printUnReviewedPullRequest: String = {
     val reviewer: Map[String, Int] = pullRequests.values.flatMap { pr =>
       pr.reviewers
         .filter(reviewer => reviewer.status == UNAPPROVED.toString)

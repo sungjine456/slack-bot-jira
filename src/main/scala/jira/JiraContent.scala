@@ -2,10 +2,14 @@ package jira
 
 import org.joda.time.format.{ DateTimeFormat, DateTimeFormatter }
 import slack.models.Attachment
-import spray.json.{ DefaultJsonProtocol, RootJsonFormat }
+import spray.json._
 import JiraContent.datePattern
+import jira.MyJsonProtocol._
 
-case class JiraContent(private val content: Content) {
+case class JiraContent(message: String) {
+
+  private val content: Content = message.parseJson.convertTo[Content]
+
   def nonEmpty: Boolean = content.total > 0
 
   def makeAttachments(issueKey: String): Attachment = {

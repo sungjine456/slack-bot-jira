@@ -3,8 +3,6 @@ package bitbucket
 import akka.actor.{ Actor, ActorLogging }
 import akka.stream.ActorMaterializer
 import helper.HttpHelper
-import bitbucket.MyJsonProtocol._
-import spray.json._
 import utils.ConfigurationReader
 
 class Bitbucket extends Actor with ActorLogging with HttpHelper {
@@ -29,9 +27,7 @@ class Bitbucket extends Actor with ActorLogging with HttpHelper {
         res <- getResponse(Bitbucket.pullRequestUri)
         message <- getMessage(res)
       } yield {
-        val bitbucketContent = BitbucketContent(message.parseJson.convertTo[PullRequests])
-
-        sender ! (channelId, bitbucketContent.printPullRequestSize)
+        sender ! (channelId, BitbucketContent(message).printPullRequestSize)
       }
     case ("bit-un-reviewed", channelId: String) =>
       val sender = this.sender
@@ -40,9 +36,7 @@ class Bitbucket extends Actor with ActorLogging with HttpHelper {
         res <- getResponse(Bitbucket.pullRequestUri)
         message <- getMessage(res)
       } yield {
-        val bitbucketContent = BitbucketContent(message.parseJson.convertTo[PullRequests])
-
-        sender ! (channelId, bitbucketContent.unReviewer)
+        sender ! (channelId, BitbucketContent(message).printUnReviewedPullRequest)
       }
     case _ => println("error")
   }

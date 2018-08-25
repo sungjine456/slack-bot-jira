@@ -3,8 +3,6 @@ package jira
 import akka.actor.{ Actor, ActorLogging }
 import akka.stream.ActorMaterializer
 import helper.HttpHelper
-import jira.MyJsonProtocol._
-import spray.json._
 import utils.ConfigurationReader
 
 class Jira extends Actor with ActorLogging with HttpHelper {
@@ -23,7 +21,7 @@ class Jira extends Actor with ActorLogging with HttpHelper {
         res <- getResponse(Jira.searchUri(issueKey))
         message <- getMessage(res)
       } yield {
-        val jiraContent = JiraContent(message.parseJson.convertTo[Content])
+        val jiraContent = JiraContent(message)
 
         if (jiraContent.nonEmpty) sender ! (channelId, jiraContent.makeAttachments(issueKey))
       }
@@ -33,11 +31,10 @@ class Jira extends Actor with ActorLogging with HttpHelper {
 
 object Jira {
   private val baseUri = ConfigurationReader("jira.baseUri")
-
-  private def searchUri(issueKey: String) = s"${ baseUri }rest/api/2/search?jql=issue=$issueKey"
-
   private val issueKey: String = ConfigurationReader("jira.issueKey").toUpperCase
   private val regex = s"$issueKey-[0-9]+".r
+
+  private def searchUri(issueKey: String) = s"${ baseUri }rest/api/2/search?jql=issue=$issueKey"
 
   def issueUri(issueKey: String): String = baseUri + "browse/" + issueKey
 
